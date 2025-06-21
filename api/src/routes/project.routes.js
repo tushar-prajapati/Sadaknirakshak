@@ -1,12 +1,14 @@
 import { Router } from "express";
-import { createProject, getUserProjects, getSingleProject } from "../controllers/project.controller.js";
+import { createProject, getUserProjects, getSingleProject, uploadThumbnail, getProjectThumbnail } from "../controllers/project.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
+import {upload} from "../middlewares/multer.middleware.js"
 
 const router = Router();
 
 router.route("/createProject").post(verifyJWT, createProject);
 router.get("/getProjects", verifyJWT, getUserProjects);
 router.get("/singleProject/:projectId", verifyJWT, getSingleProject);
-
+router.route("/upload/thumbnail").post(verifyJWT, upload.single("thumbnail"), uploadThumbnail)
+router.get("/getThumbnail/:projectId", verifyJWT, getProjectThumbnail);
 
 export default router;

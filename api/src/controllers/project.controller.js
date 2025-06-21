@@ -3,30 +3,40 @@ import { Segment } from "../models/segments.models.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import fs from 
+'fs'
+
 
 const createProject = asyncHandler(async (req, res) => {
-  const { title, description, segments } = req.body;
+  const { title, description, segments , stretch} = req.body;
 
-  if (!title || !segments || segments.length === 0) {
-    throw new ApiError(400, "Project title and at least one segment are required.");
+  if (!title || !segments || segments.length===0 || !stretch) {
+    throw new ApiError(400, "Project title, at least one segment and strech are required.");
   }
+  
   const existingProject = await Project.findOne({ title, owner: req.user._id });
     if (existingProject) {
         throw new ApiError(409, "A project with this title already exists.");
     }
+    
 
   const project = await Project.create({
     title,
     description,
     owner: req.user._id,
+    stretch,
   });
+
 
   const createdSegments = await Segment.insertMany(
     segments.map((name) => ({ name, project: project._id }))
   );
 
   project.segments = createdSegments.map((seg) => seg._id);
-  await project.save();
+  await project.save({validateBeforeSave: false});
+  await req.user.projects.push(project);
+  await req.user.save({validateBeforeSave: false});
 
   return res.status(201).json(
     new ApiResponse(201, project, "Project created successfully.")
@@ -67,11 +77,62 @@ const getSingleProject = asyncHandler(async (req, res) => {
     );
 });
 
+const uploadThumbnail= asyncHandler(async(req,res)=>{
+  const {projectId} = req.body;
+  if (!projectId) {
+    throw new ApiError(400, "Project ID is required.");
+  }
+  const project = await Project.findById(projectId);
+  if (!project) {
+      throw new ApiError(404, "Project not found.");
+  }
+  const file = req.file;
+  if(!file){
+    throw new ApiError(403, "Thumbnail not uploaded.")
+  }
+  const images = []
+  const filePath = `./public/temp/${file.filename}`;
+  const uploadedImage = await uploadOnCloudinary(filePath);
+          images.push(uploadedImage.url);
+          fs.unlinkSync(filePath);
+          project.thumbnail = uploadedImage.url;
+          await project.save({validateBeforeSave: false})
+          const thumbnail = uploadedImage.url;
+        
+  res.status(201).json(new ApiResponse(201, "Thumnail uploaded successfully.", { thumbnail }));
+  
+})
+
+const getProjectThumbnail = asyncHandler(async (req, res) => {
+  const { projectId } = req.params;
+
+  if (!projectId) {
+    throw new ApiError(400, "Project ID is required.");
+  }
+
+  const project = await Project.findById(projectId).select("thumbnail");
+
+  if (!project) {
+    throw new ApiError(404, "Project not found.");
+  }
+
+  // if (!project.thumbnail) {
+  //   throw new ApiError(404, "Thumbnail not found for this project.");
+  // }
+
+  return res.status(200).json(
+    new ApiResponse(200, { thumbnail: project.thumbnail }, "Thumbnail retrieved successfully.")
+  );
+});
+
+
 
 export {
     createProject,
     getUserProjects,
     getSingleProject,
-
+    uploadThumbnail,
+    getProjectThumbnail,
+    
 }
 

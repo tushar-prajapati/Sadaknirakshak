@@ -32,8 +32,14 @@ const userSchema = new mongoose.Schema({
     projects: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Project"
+    }],
+    isAdmin: {
+        type: Boolean,
+        default: false,
     },
-    ]
+    employees: [{type: String}],
+    assignedSegments: [],
+    master: String,
  
 },{timestamps: true})
 
@@ -54,7 +60,8 @@ userSchema.methods.generateAccessToken = function(){
             _id : this._id,
             username: this.username,
             fullName: this.fullName,
-            email : this.email
+            email : this.email,
+            isAdmin: this.isAdmin,
         },
         process.env.ACCESS_TOKEN_SECRET,
         {

@@ -25,7 +25,13 @@ const projectSchema = new mongoose.Schema({
     completeReport: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Segment"
-    }]
+    }],
+    thumbnail: {
+        type: String,
+    },
+    stretch: {
+        type: Number
+    },
 
 
 },{timestamps: true})

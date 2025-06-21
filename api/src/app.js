@@ -16,16 +16,22 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: 'Internal Server Error', details: err.message });
   });
   
+import adminRouter from "./routes/admin.routes.js";
+app.use("/api/v1/admins", adminRouter)
 
-//routes
-import userRouter from "./routes/user.routes.js";
+import userRouter from "./routes/user.routes.js"
 app.use("/api/v1/users", userRouter)
+
+// app.use("/api/v1/admin", adminRouter)
 
 import projectRouter from "./routes/project.routes.js";
 app.use("/api/v1/projects", projectRouter);
 
 import segmentRouter from "./routes/segment.routes.js"
 app.use("/api/v1/segments", segmentRouter)
+
+import analyseRouter from "./routes/analyse.routes.js"
+app.use("/api/v1/analyse", analyseRouter)
 
 
 export {app}

@@ -1,6 +1,9 @@
 import mongoose from "mongoose";
 
 const analyseSchema = new mongoose.Schema({
+    name: {
+        type: String,
+    },
     project: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Project",
